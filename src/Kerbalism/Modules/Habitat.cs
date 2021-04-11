@@ -704,7 +704,19 @@ namespace KERBALISM
 				volume > 0.0 ? "" : " (bounds)");
 		}
 
-		public float GetModuleCost(float defaultCost, ModifierStagingSituation sit) => shieldingCost;
+		public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
+		{
+			//shieldingCost must always be set such that part costs is balanced correctly in the editor.
+			//Also, setting shieldingCost in OnStart() is not enough on its own for all cases, this is because when opening crafts in the editor, this method is called before OnStart().
+			//So, to set shieldingCost somewhere else, remember to check if it is actually set before this method is called. Also, use the gravity ring when testing, I first noticed these issues when testing with that part :)
+			if (shieldingCost <= 0 && !(part is null) && part.Resources.Contains("Shielding")) //Might not be necessary to null check part, but I don't know Ksp/Unity, so gotta be safe. However, not checking the resource will result in null errors.
+			{
+				shieldingCost = (float)surface * part.Resources["Shielding"].info.unitCost;
+			}
+
+			return shieldingCost;
+		}
+
 		public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.CONSTANTLY;
 
 		[KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "[Debug] log volume/surface", active = false, groupName = "Habitat", groupDisplayName = "#KERBALISM_Group_Habitat")]//Habitat
